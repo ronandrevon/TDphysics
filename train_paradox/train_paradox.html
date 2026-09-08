@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Minkowski Spacetime Visualizer</title>
+
+  <!-- MathJax v3 for LaTeX rendering -->
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+  <style>
+    /* Container wrapping legend, caption, and controls together */
+    .main-content-wrapper {
+      width: 100%;
+      max-width: 1900px; /* Adjust or remove max-width to expand even further */
+      display: flex;
+      flex-direction: column;
+      align-items: stretch; /* Forces children to stretch to 100% width */
+      box-sizing: border-box;
+    }    
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #1e1e1e;
+      color: #eee;
+      margin: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      background: #2a2a2a;
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      width: 860px;
+      box-sizing: border-box;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .control-group.checkbox-group {
+      flex-direction: row;
+      align-items: center;
+      gap: 0px;
+      grid-column: span 2;
+    }
+    label { font-size: 12px; font-weight: 500; }
+    input[type="range"] { width: 100%; }
+    input[type="number"], select {
+      background: #333;
+      border: 1px solid #555;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      accent-color: #ff6b6b;
+      cursor: pointer;
+    }
+  /* Layout container wrapping all card groups */
+  .controls-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    max-width: 1900px;
+    width: 100%;
+    margin-bottom: 15px;
+  }
+
+  /* Individual Control Card */
+  .control-card {
+    background: #252525;
+    border: 1px solid #383838;
+    border-radius: 8px;
+    flex: 1 1 100px; /* Responsive flexible cards */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+  }
+
+  .control-card.full-width {
+    flex: 1 1 100%;
+  }
+
+  /* Group Header Title */
+  .card-header {
+    background: #2e2e2e;
+    border-bottom: 1px solid #383838;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #ff6b6b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Internal Card Grid Layout */
+  .card-body {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .card-body.grid-checkboxes {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  }
+
+  /* Individual Control Layout */
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .btn-reset {
+    background: #444;
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.2s;
+  }
+  .btn-reset:hover {
+    background: #555;
+  }       
+  .gamma-badge {
+    background: #e74c3c;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+  }   
+    .canvas-container {
+      position: relative;
+      display: inline-block;
+    }
+    canvas {
+      background: #111;
+      border: 1px solid #444;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      cursor: grab;
+      display: block;
+    }
+    canvas:active { cursor: grabbing; }
+    .tooltip {
+      position: absolute;
+      background: rgba(20, 20, 20, 0.95);
+      border: 1px solid #ff6b6b;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      pointer-events: none;
+      display: none;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      z-index: 100;
+      white-space: nowrap;
+      line-height: 1.4;
+    }
+
+
+
+  /* Event Legend Container */
+  .event-caption {
+    width: 100%;                  /* Occupies 100% of wrapper width */
+    box-sizing: border-box;       /* Keeps padding inside width bounds */
+    background: #252525;
+    border: 1px solid #3d3d3d;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-top: 15px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  /* Make inner grid items stretch fully across the expanded width */
+  .event-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive columns */
+    gap: 12px;
+    width: 100%;
+  }
+
+  /* Color Legend Bar */
+  .legend {
+    width: 100%;                  /* Occupies 100% of wrapper width */
+    box-sizing: border-box;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around; /* Distributes items evenly across full width */
+    align-items: center;
+    background: #252525;
+    border: 1px solid #383838;
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin-top: 15px;
+    font-size: 12px;
+  }    
+
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .box { width: 12px; height: 12px; border-radius: 2px; }
+  .event-caption {
+    background: #252525;
+    border: 1px solid #3d3d3d;
+    border-radius: 6px;
+    padding: 12px 18px;
+    margin-top: 15px;
+    width: 860px;
+    box-sizing: border-box;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  
+  /* Event Legend Container */
+  .event-caption {
+    width: 100%;                  /* Occupies 100% of wrapper width */
+    box-sizing: border-box;       /* Keeps padding inside width bounds */
+    background: #252525;
+    border: 1px solid #3d3d3d;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-top: 15px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  /* Make inner grid items stretch fully across the expanded width */
+  .event-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive columns */
+    gap: 12px;
+    width: 100%;
+  }
+
+  </style>
+</head>
+<body>
+
+
+
+
+
+<div class="main-content-wrapper">
+<div class="controls-wrapper">
+  
+  <!-- Group 1: Physics Parameters -->
+  <div class="control-card">
+    <div class="card-header">Physics & Dimensions</div>
+    <div class="card-body">
+      <div class="control-group">
+        <label for="beta">Velocity ($\beta = v/c$): <span id="betaVal">0.50</span> $\rightarrow$
+         Lorentz Factor ($\gamma$): <span Lorentz Factor ($\gamma$): id="gammaVal">1.25</span>
+        </label>
+        <input type="range" id="beta" min="0" max="0.99" step="0.01">
+      </div>      
+      <div class="control-group">
+        <label for="L_train">Train $L_0$ (m):</label>
+        <input type="number" id="L_train" min="10" max="300" step="10">
+      </div>
+      <div class="control-group">
+        <label for="L_tunnel">Tunnel $L_0'$ (m):</label>
+        <input type="number" id="L_tunnel" min="10" max="300" step="10">
+      </div>
+       <div class="control-group">
+        <label for="scenarioMode">Scenario Signal Filter:</label>
+        <select id="scenarioMode">
+          <option value="auto">Auto (Depends on Lengths)</option>
+          <option value="bomb">Bomb Scenario ($L_{\text{train}} > L_{\text{tunnel}}$)</option>
+          <option value="disarm">Disarm Scenario ($L_{\text{tunnel}} > L_{\text{train}}$)</option>
+          <option value="both">Show Both Signals</option>
+        </select>
+      </div>     
+    </div>
+  </div>
+
+  <!-- Group 2: View & Canvas Controls -->
+  <div class="control-card">
+    <div class="card-header">View & Canvas Options</div>
+    <div class="card-body">
+      <div class="control-group">
+        <label for="axisMode">Axis Orientation:</label>
+        <select id="axisMode">
+          <option value="xt">Vertical = $ct$, Horiz = $x$</option>
+          <option value="tx">Vertical = $x$, Horiz = $ct$</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label for="zoomSlider">Zoom Scale:</label>
+        <input type="range" id="zoomSlider" min="1" max="8" step="0.2">
+      </div>
+      <div class="control-group" style="justify-content: flex-end;">
+        <button id="resetPan" class="btn-reset">Reset View</button>
+      </div>      
+      <div class="control-group">
+        <label for="canvasW">Canvas Width (px):</label>
+        <input type="number" id="canvasW" min="400" max="1900" step="20">
+      </div>
+      <div class="control-group">
+        <label for="canvasH">Canvas Height (px):</label>
+        <input type="number" id="canvasH" min="300" max="1000" step="20">
+      </div>      
+
+    </div>
+  </div>
+
+  <!-- Group 3: Grid & Element Visibility -->
+  <div class="control-card full-width">
+    <div class="card-header">Element Toggles</div>
+    <div class="card-body grid-checkboxes">
+      <div class="control-group checkbox-group">
+        <input type="checkbox" id="showUnprimedGridCheck" checked>
+        <label for="showUnprimedGridCheck"> $O_{tunnel}$ Grid ($x, ct$)</label>
+      </div>
+      <div class="control-group checkbox-group">
+        <input type="checkbox" id="showPrimedGridCheck" checked>
+        <label for="showPrimedGridCheck"> $O_{train} ($x', ct'$)</label>
+      </div>   
+      <div class="control-group checkbox-group">
+        <input type="checkbox" id="showTunnelCheck" checked>
+        <label for="showTunnelCheck">Tunnel Worldsheet ($\text{𓉸}$)</label>
+      </div>      
+      <div class="control-group checkbox-group">
+        <input type="checkbox" id="showTrainCheck" checked>
+        <label for="showTrainCheck">Train Worldsheet ($\text{🚆}$)</label>
+      </div>
+      <div class="control-group checkbox-group">
+        <input type="checkbox" id="showEventsCheck" checked>
+        <label for="showEventsCheck"> Events</label>
+      </div>     
+      <div class="control-group checkbox-group">
+        <input type="checkbox" id="showLinesCheck">
+        <label for="showLinesCheck"> Simultaneity/Space Lines</label>
+      </div>       
+      <div class="control-group checkbox-group">
+        <input type="checkbox" id="showSignalsCheck" checked>
+        <label for="showSignalsCheck">Propagation Signal Lines</label>
+      </div>
+      <div class="control-group checkbox-group">
+        <input type="checkbox" id="showBCConnectCheck" checked>
+        <label for="showBCConnectCheck"> Intervals $\Delta s^2$ </label>
+      </div>
+
+      <div class="control-group checkbox-group">
+        <input type="checkbox" id="symbolToggleCheck">
+        <label for="symbolToggleCheck">Viewpoint ? ($\text{🙏}$) / ($\text{💣}$)</label>
+      </div>
+      <div class="control-group checkbox-group">
+        <input type="checkbox" id="showAxesCheck" checked>
+        <label for="showAxesCheck"> Light Cone </label>
+      </div>      
+    </div>
+  </div>
+
+</div>
+
+
+
+  <!-- Canvas Container -->
+  <div class="canvas-container">
+    <canvas id="spacetime"></canvas>
+    <div id="tooltip" class="tooltip"></div>
+  </div>
+
+  <!-- Legend fully occupying width -->
+  <div class="legend" id="legendContainer">
+    <div class="legend-item"><div class="box" style="background:#444"></div> Frame $\mathcal{O}_{\text{tunnel}}$  $(x, ct)$</div>
+    <div class="legend-item"><div class="box" style="background:#ff6b6b"></div> Frame $\mathcal{O}'_{\text{train}}$  $(x', ct')$</div>
+    <div class="legend-item"><div class="box" style="background:rgba(76, 209, 55, 0.5)"></div> Train Worldsheet ($\text{🚆}$)</div>
+    <div class="legend-item"><div class="box" style="background:rgba(0, 168, 255, 0.5)"></div> Tunnel Worldsheet ($\text{🚇}$)</div>
+    <!-- <div class="legend-item"><div class="box" style="background:#f1c40f"></div> Disarm Signal (C $\rightarrow$ D)</div> -->
+    <div class="legend-item"><div class="box" style="background:#00d2d3"></div> Disarm Signal (B $\rightarrow$ E)</div>
+  </div>
+
+  <!-- Caption container fully occupying width -->
+  <div class="event-caption" id="captionContainer">
+    <h4>Event Legend</h4>
+    <div class="event-grid">
+      <div><span class="ev-badge" style="background:#e74c3c;">A</span> <strong>Origin:</strong> Front enters tunnel $(x=0, ct=0)$.</div>
+      <div><span class="ev-badge" style="background:#e67e22;">B</span> <strong>Front Exits:</strong> Front exits tunnel $(x=L_{\text{tunnel}})$, sending signal.</div>
+      <div><span class="ev-badge" style="background:#9b59b6;">C</span> <strong>Rear Enters:</strong> Rear enters tunnel $(x=0)$, sending signal.</div>
+      <div><span class="ev-badge" style="background:#2ecc71;">D</span> <strong>Disarmed:</strong> Forward signal from C catches front of train.</div>
+      <div><span class="ev-badge" style="background:#00d2d3;">E</span> <strong>Bomb Triggered:</strong> Backward signal from B reaches rear of train.</div>
+    </div>
+  </div>
+
+</div>
+
+
+  
+  <script>
+    const CONFIG = {
+      defaultBeta: 0.50,
+      defaultTrainL0: 100,
+      defaultTunnelL0: 105,
+      defaultAxisMode: 'tx',
+      defaultCanvasW: 1860,
+      defaultCanvasH: 750,
+      defaultZoom: 1.5,
+      originOffsetX: 0.35,
+      originOffsetY: 0.75,
+      gridStep: 50,
+
+      showUnprimedGridCheck:false,
+      showPrimedGridCheck:false,
+      showAxesCheck:false,
+      showEventsCheck:true,
+      showTrainCheck:true,
+      showTunnelCheck:true,
+      showSignalsCheck:false,
+      showLinesCheck:true,
+      showBCConnectCheck:false,
+      symbolToggleCheck:true
+    };
+
+    const canvas = document.getElementById('spacetime');
+    const ctx = canvas.getContext('2d');
+    const tooltip = document.getElementById('tooltip');
+
+    const betaInput = document.getElementById('beta');
+    const betaVal = document.getElementById('betaVal');
+    const gammaVal = document.getElementById('gammaVal');
+    const trainInput = document.getElementById('L_train');
+    const tunnelInput = document.getElementById('L_tunnel');
+    const scenarioSelect = document.getElementById('scenarioMode');
+    const axisSelect = document.getElementById('axisMode');
+    const canvasWInput = document.getElementById('canvasW');
+    const canvasHInput = document.getElementById('canvasH');
+    const zoomInput = document.getElementById('zoomSlider');
+
+    const showUnprimedGridCheck = document.getElementById('showUnprimedGridCheck');
+    const showPrimedGridCheck = document.getElementById('showPrimedGridCheck');
+    const showAxesCheck = document.getElementById('showAxesCheck');
+    const showEventsCheck = document.getElementById('showEventsCheck');
+    const showTrainCheck = document.getElementById('showTrainCheck');
+    const showTunnelCheck = document.getElementById('showTunnelCheck');
+    const showSignalsCheck = document.getElementById('showSignalsCheck');
+    const showLinesCheck = document.getElementById('showLinesCheck');
+    const showBCConnectCheck = document.getElementById('showBCConnectCheck');
+    const symbolToggleCheck = document.getElementById('symbolToggleCheck');
+    const resetPanBtn = document.getElementById('resetPan');
+
+    betaInput.value = CONFIG.defaultBeta;
+    trainInput.value = CONFIG.defaultTrainL0;
+    tunnelInput.value = CONFIG.defaultTunnelL0;
+    axisSelect.value = CONFIG.defaultAxisMode;
+    canvasWInput.value = CONFIG.defaultCanvasW;
+    canvasHInput.value = CONFIG.defaultCanvasH;
+    zoomInput.value = CONFIG.defaultZoom;
+
+    showUnprimedGridCheck.checked=CONFIG.showUnprimedGridCheck; 
+    showPrimedGridCheck.checked=CONFIG.showPrimedGridCheck; 
+    showAxesCheck.checked=CONFIG.showAxesCheck; 
+    showEventsCheck.checked=CONFIG.showEventsCheck; 
+    showTrainCheck.checked=CONFIG.showTrainCheck; 
+    showTunnelCheck.checked=CONFIG.showTunnelCheck; 
+    showSignalsCheck.checked=CONFIG.showSignalsCheck; 
+    showLinesCheck.checked=CONFIG.showLinesCheck; 
+    showBCConnectCheck.checked=CONFIG.showBCConnectCheck; 
+    symbolToggleCheck.checked=CONFIG.symbolToggleCheck; 
+
+    let panX = 0, panY = 0;
+    let isDragging = false;
+    let startMouseX = 0, startMouseY = 0;
+    let currentEvents = {};
+    let activeSimultaneityLines = [];
+
+    canvas.addEventListener('mousedown', e => {
+      isDragging = true;
+      startMouseX = e.clientX - panX;
+      startMouseY = e.clientY - panY;
+    });
+
+    window.addEventListener('mousemove', e => {
+      if (isDragging) {
+        panX = e.clientX - startMouseX;
+        panY = e.clientY - startMouseY;
+        draw();
+      }
+      handleHover(e);
+    });
+
+    window.addEventListener('mouseup', () => isDragging = false);
+
+    canvas.addEventListener('wheel', e => {
+      e.preventDefault();
+      let zoom = parseFloat(zoomInput.value);
+      zoom += e.deltaY < 0 ? 0.2 : -0.2;
+      zoom = Math.max(1, Math.min(8, zoom));
+      zoomInput.value = zoom;
+      draw();
+    }, { passive: false });
+
+    resetPanBtn.addEventListener('click', () => {
+      panX = 0; panY = 0;
+      zoomInput.value = CONFIG.defaultZoom;
+      draw();
+    });
+
+    function mapCoords(x, ct) {
+      const scale = parseFloat(zoomInput.value);
+      const axis = axisSelect.value;
+      const originX = canvas.width * CONFIG.originOffsetX + panX;
+      const originY = canvas.height * CONFIG.originOffsetY + panY;
+
+      let horiz = (axis === 'xt') ? x : ct;
+      let vert = (axis === 'xt') ? ct : x;
+
+      return { x: originX + horiz * scale, y: originY - vert * scale };
+    }
+
+    function distanceToSegment(px, py, x1, y1, x2, y2) {
+      const l2 = (x2 - x1) ** 2 + (y2 - y1) ** 2;
+      if (l2 === 0) return Math.hypot(px - x1, py - y1);
+      let t = ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / l2;
+      t = Math.max(0, Math.min(1, t));
+      return Math.hypot(px - (x1 + t * (x2 - x1)), py - (y1 + t * (y2 - y1)));
+    }
+
+    function handleHover(e) {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      let hoverText = "";
+
+      // 1. Hover Event Markers
+      for (const [key, ev] of Object.entries(currentEvents)) {
+        if (!ev.visible) continue;
+        const pt = mapCoords(ev.x, ev.ct);
+        if (Math.hypot(pt.x - mouseX, pt.y - mouseY) <= 10) {
+          hoverText = `
+            <strong>Event ${key}</strong><br/>
+            $\\mathcal{O}_{\\text{tunnel}}$ $(x, ct)$: (${ev.x.toFixed(1)}, ${ev.ct.toFixed(1)}) m<br/>
+            $\\mathcal{O}'_{\\text{train}}$ $(x', ct')$: (${ev.xp.toFixed(1)}, ${ev.ctp.toFixed(1)}) m
+          `;
+          break;
+        }
+      }
+
+      // 2. Hover Simultaneity and Space Lines
+      if (!hoverText && showLinesCheck.checked) {
+        for (let line of activeSimultaneityLines) {
+          if (distanceToSegment(mouseX, mouseY, line.p1.x, line.p1.y, line.p2.x, line.p2.y) < 6) {
+            hoverText = `
+              <strong>${line.type}</strong><br/>
+              Frame: $${line.frame}$<br/>
+              Value: $${line.label} = ${line.value.toFixed(1)}$ m
+            `;
+            break;
+          }
+        }
+      }
+
+      // 3. Hover B-C & B-E Interval Lines
+      if (!hoverText && showBCConnectCheck.checked) {
+        let ptB = mapCoords(currentEvents.B.x, currentEvents.B.ct);
+        let ptC = mapCoords(currentEvents.C.x, currentEvents.C.ct);
+        if (distanceToSegment(mouseX, mouseY, ptB.x, ptB.y, ptC.x, ptC.y) < 6) {
+          const dx = currentEvents.B.x - currentEvents.C.x;
+          const dct = currentEvents.B.ct - currentEvents.C.ct;
+          const ds2 = -dct * dct + dx * dx;
+
+          hoverText = `
+            <strong>Interval B–C</strong><br/>
+            Spacetime Interval $\\Delta s^2$: <strong>${ds2.toFixed(1)} m²</strong><br/>
+            $\\Delta x$: ${dx.toFixed(1)} m, $\\Delta ct$: ${dct.toFixed(1)} m
+          `;
+        } else if (currentEvents.E.visible) {
+          let ptE = mapCoords(currentEvents.E.x, currentEvents.E.ct);
+          if (distanceToSegment(mouseX, mouseY, ptB.x, ptB.y, ptE.x, ptE.y) < 6) {
+            const dx = currentEvents.E.x - currentEvents.B.x;
+            const dct = currentEvents.E.ct - currentEvents.B.ct;
+            const ds2 = -dct * dct + dx * dx;
+
+            hoverText = `
+              <strong>Interval B–E (Lightlike)</strong><br/>
+              Spacetime Interval $\\Delta s^2$: <strong>${ds2.toFixed(1)} m²</strong><br/>
+              $\\Delta x$: ${dx.toFixed(1)} m, $\\Delta ct$: ${dct.toFixed(1)} m
+            `;
+          }
+        }
+      }
+
+      // 4. Hover Signal C->D Line
+      if (!hoverText && showSignalsCheck.checked && currentEvents.D.visible) {
+        let ptC = mapCoords(currentEvents.C.x, currentEvents.C.ct);
+        let ptD = mapCoords(currentEvents.D.x, currentEvents.D.ct);
+        if (distanceToSegment(mouseX, mouseY, ptC.x, ptC.y, ptD.x, ptD.y) < 6) {
+          const dt_unprimed = currentEvents.D.ct - currentEvents.C.ct;
+          const dt_primed = currentEvents.D.ctp - currentEvents.C.ctp;
+          hoverText = `
+            <strong>Forward Disarm Signal (C $\\rightarrow$ D)</strong><br/>
+            Propagation Time $\\Delta ct$ ($\\mathcal{O}_{\\text{tunnel}}$): ${dt_unprimed.toFixed(1)} m<br/>
+            Propagation Time $\\Delta ct'$ ($\\mathcal{O}'_{\\text{train}}$): ${dt_primed.toFixed(1)} m
+          `;
+        }
+      }
+
+      // 5. Hover Signal B->E Line
+      if (!hoverText && showSignalsCheck.checked && currentEvents.E.visible) {
+        let ptB = mapCoords(currentEvents.B.x, currentEvents.B.ct);
+        let ptE = mapCoords(currentEvents.E.x, currentEvents.E.ct);
+        if (distanceToSegment(mouseX, mouseY, ptB.x, ptB.y, ptE.x, ptE.y) < 6) {
+          const dt_unprimed = currentEvents.E.ct - currentEvents.B.ct;
+          const dt_primed = currentEvents.E.ctp - currentEvents.B.ctp;
+          hoverText = `
+            <strong>Backward Bomb Signal (B $\\rightarrow$ E)</strong><br/>
+            Propagation Time $\\Delta ct$ ($\\mathcal{O}_{\\text{tunnel}}$): ${dt_unprimed.toFixed(1)} m<br/>
+            Propagation Time $\\Delta ct'$ ($\\mathcal{O}'_{\\text{train}}$): ${dt_primed.toFixed(1)} m
+          `;
+        }
+      }
+
+      if (hoverText) {
+        tooltip.style.display = 'block';
+        tooltip.style.left = `${e.clientX - rect.left + 15}px`;
+        tooltip.style.top = `${e.clientY - rect.top - 35}px`;
+        tooltip.innerHTML = hoverText;
+        if (window.MathJax) MathJax.typesetPromise([tooltip]);
+      } else {
+        tooltip.style.display = 'none';
+      }
+    }
+
+    function drawEventMarker(pt, label, color, showSymbol = false) {
+      ctx.fillStyle = color;
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, 6, 0, 2 * Math.PI); ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillText(label, pt.x + 9, pt.y - 9);
+
+      if (showSymbol) {
+        const symbol = symbolToggleCheck.checked ? '🙏' : '💣';
+        ctx.font = '25px sans-serif';
+        ctx.fillText(symbol, pt.x - 22, pt.y + 5);
+      }
+    }
+
+    function drawSineSignalLine(p1, p2, color) {
+      const dx = p2.x - p1.x;
+      const dy = p2.y - p1.y;
+      const len = Math.hypot(dx, dy);
+      const angle = Math.atan2(dy, dx);
+
+      ctx.save();
+      ctx.translate(p1.x, p1.y);
+      ctx.rotate(angle);
+
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      const amplitude = 5;
+      const frequency = 0.15;
+      for (let px = 0; px <= len; px += 2) {
+        let py = Math.sin(px * frequency) * amplitude;
+        if (px === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+
+      const arrowCount = 3;
+      ctx.fillStyle = color;
+      for (let i = 1; i <= arrowCount; i++) {
+        let arrowX = (len * i) / (arrowCount + 1);
+        let arrowY = Math.sin(arrowX * frequency) * amplitude;
+        
+        ctx.save();
+        ctx.translate(arrowX, arrowY);
+        ctx.beginPath();
+        ctx.moveTo(6, 0);
+        ctx.lineTo(-4, -4);
+        ctx.lineTo(-4, 4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      ctx.restore();
+    }
+
+    function draw() {
+      canvas.width = parseInt(canvasWInput.value);
+      canvas.height = parseInt(canvasHInput.value);
+
+      const beta = parseFloat(betaInput.value);
+      const L_train = parseFloat(trainInput.value);
+      const L_tunnel = parseFloat(tunnelInput.value);
+      const axis = axisSelect.value;
+      const scenario = scenarioSelect.value;
+
+      const showUnprimedGrid = showUnprimedGridCheck.checked;
+      const showPrimedGrid = showPrimedGridCheck.checked;
+      const showAxes = showAxesCheck.checked;
+      const showEvents = showEventsCheck.checked;
+      const showTrain = showTrainCheck.checked;
+      const showTunnel = showTunnelCheck.checked;
+      const showSignals = showSignalsCheck.checked;
+      const showLines = showLinesCheck.checked;
+      const showBCConnect = showBCConnectCheck.checked;
+
+      const gamma = 1 / Math.sqrt(1 - beta * beta);
+      betaVal.textContent = beta.toFixed(2);
+      gammaVal.textContent = gamma.toFixed(3);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const step = CONFIG.gridStep;
+      const minVal = -200, maxVal = 500;
+      activeSimultaneityLines = [];
+
+      let origin = mapCoords(0, 0);
+      let hEnd = (axis === 'xt') ? mapCoords(300, 0) : mapCoords(0, 300);
+      let vEnd = (axis === 'xt') ? mapCoords(0, 300) : mapCoords(300, 0);
+      let tickVal = 50;
+
+      // 1. Unprimed Grid
+      if (showUnprimedGrid) {
+        // Grid Lines for O axes
+        ctx.strokeStyle = '#252525';
+        ctx.lineWidth = 1;
+        for (let v = minVal; v <= maxVal; v += step) {
+          let p1 = mapCoords(v, minVal), p2 = mapCoords(v, maxVal);
+          ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+          let p3 = mapCoords(minVal, v), p4 = mapCoords(maxVal, v);
+          ctx.beginPath(); ctx.moveTo(p3.x, p3.y); ctx.lineTo(p4.x, p4.y); ctx.stroke();
+        }
+        // axes Lines for O axes
+        ctx.lineWidth = 2; ctx.strokeStyle = '#ffffff';        
+        ctx.beginPath(); ctx.moveTo(origin.x, origin.y); ctx.lineTo(hEnd.x, origin.y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(origin.x, origin.y); ctx.lineTo(origin.x, vEnd.y); ctx.stroke();
+
+        // Ticks O
+        ctx.fillStyle = '#aaa'; ctx.font = 'bold 13px sans-serif';
+        for (let val = 0; val <= 300; val += step) {
+          if (val === 0) continue;
+          let hVal = (axis === 'xt') ? { x: val, ct: 0 } : { x: 0, ct: val };
+          let hPt = mapCoords(hVal.x, hVal.ct);
+          ctx.beginPath(); ctx.moveTo(hPt.x, origin.y - 3); ctx.lineTo(hPt.x, origin.y + 3); ctx.stroke();
+          if (val % tickVal === 0) ctx.fillText(val, hPt.x - 8, origin.y + 15);
+
+          let vVal = (axis === 'xt') ? { x: 0, ct: val } : { x: val, ct: 0 };
+          let vPt = mapCoords(vVal.x, vVal.ct);
+          ctx.beginPath(); ctx.moveTo(origin.x - 3, vPt.y); ctx.lineTo(origin.x + 3, vPt.y); ctx.stroke();
+          if (val % tickVal === 0) ctx.fillText(val, origin.x - 25, vPt.y + 3);
+        }
+        // label for axes O
+        ctx.fillStyle = '#ffffff'; ctx.font = 'bold 18px sans-serif';
+        if (axis === 'xt') {
+          ctx.fillText('x (m)', hEnd.x - 20, origin.y + 25);
+          ctx.fillText('ct (m)', origin.x - 45, vEnd.y + 15);
+        } else {
+          ctx.fillText('ct (m)', hEnd.x + 5, origin.y -5);
+          ctx.fillText('x (m)', origin.x + 5, vEnd.y - 5);
+        }        
+      }
+
+      // 2. Primed Lorentz Grid
+      if (showPrimedGrid) {
+        ctx.strokeStyle = 'rgba(255, 107, 107, 0.25)';
+        ctx.lineWidth = 1;
+        for (let ct_p = minVal; ct_p <= maxVal; ct_p += step) {
+          let p1 = mapCoords(gamma * (minVal + beta * ct_p), gamma * (ct_p + beta * minVal));
+          let p2 = mapCoords(gamma * (maxVal + beta * ct_p), gamma * (ct_p + beta * maxVal));
+          ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+        }
+        for (let x_p = minVal; x_p <= maxVal; x_p += step) {
+          let p1 = mapCoords(gamma * (x_p + beta * minVal), gamma * (minVal + beta * x_p));
+          let p2 = mapCoords(gamma * (x_p + beta * maxVal), gamma * (maxVal + beta * x_p));
+          ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+        }
+
+        // Grid Lines for O' axes
+        ctx.strokeStyle = '#ff6b6b';
+        ctx.lineWidth = 2;
+        let xp_neg = mapCoords(gamma * 0, gamma * beta * 0);
+        let xp_pos = mapCoords(gamma * 300, gamma * beta * 300);
+        ctx.beginPath(); ctx.moveTo(xp_neg.x, xp_neg.y); ctx.lineTo(xp_pos.x, xp_pos.y); ctx.stroke();
+
+        let ctp_neg = mapCoords(gamma * beta * 0, gamma * 0);
+        let ctp_pos = mapCoords(gamma * beta * 300, gamma * 300);
+        ctx.beginPath(); ctx.moveTo(ctp_neg.x, ctp_neg.y); ctx.lineTo(ctp_pos.x, ctp_pos.y); ctx.stroke();
+
+        // label for O'
+        ctx.fillStyle = '#ff6b6b'; ctx.font = 'bold 18px sans-serif';
+        if (axis === 'xt') {
+        } else {
+          ctx.fillText("x' (m)" , xp_pos.x - 10 , xp_pos.y - 10);
+          ctx.fillText("ct' (m)", ctp_pos.x + 5 , ctp_pos.y + 10);
+        }  
+
+        // ticks O'
+        ctx.fillStyle = '#ff6b6b';ctx.font = 'bold 13px sans-serif';
+        for (let val = 0; val <= 300; val += step) {
+          if (val === 0) continue;
+          let xp_pt = mapCoords(gamma * val, gamma * beta * val);
+          ctx.beginPath(); ctx.arc(xp_pt.x, xp_pt.y, 2, 0, 2*Math.PI); ctx.fill();
+          if (val % tickVal === 0) ctx.fillText(val + "'", xp_pt.x + 4, xp_pt.y + 10);
+
+          let ctp_pt = mapCoords(gamma * beta * val, gamma * val);
+          ctx.beginPath(); ctx.arc(ctp_pt.x, ctp_pt.y, 2, 0, 2*Math.PI); ctx.fill();
+          if (val % tickVal === 0) ctx.fillText(val + "'", ctp_pt.x - 20, ctp_pt.y - 2);
+        }        
+      }
+
+      // 3. Tunnel Worldsheet
+      if (showTunnel) {
+        ctx.fillStyle = 'rgba(0, 168, 255, 0.2)';
+        ctx.strokeStyle = '#00a8ff';
+        ctx.lineWidth = 1.5;
+        let tun_bl = mapCoords(0, 0), tun_br = mapCoords(L_tunnel, 0);
+        let tun_tr = mapCoords(L_tunnel, 450), tun_tl = mapCoords(0, 450);
+        ctx.beginPath();
+        ctx.moveTo(tun_bl.x, tun_bl.y); ctx.lineTo(tun_br.x, tun_br.y);
+        ctx.lineTo(tun_tr.x, tun_tr.y); ctx.lineTo(tun_tl.x, tun_tl.y);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        
+        // Tunnel Symbol at origin level
+        ctx.fillStyle = 'rgba(0, 168, 255, 0.8)';
+        ctx.font = '50px sans-serif';
+        let tunMid = mapCoords(L_tunnel / 2, 0);
+        ctx.fillText('𓉸', tunMid.x - 55, tunMid.y + 22);
+      }
+
+      // 4. Train Worldsheet
+      if (showTrain) {
+        ctx.fillStyle = 'rgba(76, 209, 55, 0.2)';
+        ctx.strokeStyle = '#4cd137';
+        
+        let ct_min = 0, ct_max = 450;
+        let train_f1 = mapCoords(gamma * (0 + beta * ct_min), gamma * (ct_min + beta * 0));
+        let train_f2 = mapCoords(gamma * (0 + beta * ct_max), gamma * (ct_max + beta * 0));
+        let train_r1 = mapCoords(gamma * (-L_train + beta * ct_min), gamma * (ct_min + beta * (-L_train)));
+        let train_r2 = mapCoords(gamma * (-L_train + beta * ct_max), gamma * (ct_max + beta * (-L_train)));
+        ctx.beginPath();
+        ctx.moveTo(train_r1.x, train_r1.y); ctx.lineTo(train_f1.x, train_f1.y);
+        ctx.lineTo(train_f2.x, train_f2.y); ctx.lineTo(train_r2.x, train_r2.y);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+
+        // Train Symbol at origin level
+        ctx.font = '40px sans-serif';
+        ctx.fillStyle = 'rgba(76, 209, 55, 0.8)';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';        
+        let trainMid = mapCoords(gamma * (-L_train / 2), gamma * beta * (-L_train / 2));
+        
+        ctx.save();
+        ctx.translate(trainMid.x-40, trainMid.y+20);       
+        ctx.scale(-1, 1); // Flip horizontally across local Y-axis 
+        ctx.rotate(-Math.atan(beta)+Math.PI / 2);
+        ctx.fillText('🚂🚃🚃🚃🚃',0,0);
+        ctx.font = '35px sans-serif';
+        ctx.fillStyle = 'rgba(255, 255,255, 1)';
+        ctx.fillText('🖥',135,-15);
+        ctx.font = '30px sans-serif';
+        ctx.fillText('💣',-135,0);
+        ctx.restore();
+      }
+
+      // 5. Events Calculations
+      let ct_B = L_tunnel / beta;
+      let ct_C = L_train / (beta * gamma);
+      let ct_D = ct_C / (1 - beta);
+      let x_D = beta * ct_D;
+      let ct_E = (L_tunnel + ct_B + L_train / gamma) / (1 + beta);
+      let x_E = L_tunnel + ct_B - ct_E;
+
+      const calcLorentz = (x, ct) => ({
+        x, ct,
+        xp: gamma * (x - beta * ct),
+        ctp: gamma * (ct - beta * x),
+        visible: true
+      });
+
+      currentEvents = {
+        A: calcLorentz(0, 0),
+        B: calcLorentz(L_tunnel, ct_B),
+        C: calcLorentz(0, ct_C),
+        D: calcLorentz(x_D, ct_D),
+        E: calcLorentz(x_E, ct_E)
+      };
+
+      // Scenario Filter
+      let showYellow = false, showCyan = false;
+      if (scenario === 'bomb') showCyan = true;
+      else if (scenario === 'disarm') showYellow = true;
+      else if (scenario === 'both') { showYellow = true; showCyan = true; }
+      else {
+        if (L_train > L_tunnel) showCyan = true;
+        else showYellow = true;
+      }
+
+      currentEvents.D.visible = showYellow;
+      currentEvents.E.visible = showCyan;
+
+      // 6. Simultaneity & Position Lines
+      if (showLines) {
+        ctx.setLineDash([4, 4]);
+        [
+          { ev: currentEvents.B, name: 'B' },
+          { ev: currentEvents.C, name: 'C' }
+        ].forEach(({ ev, name }) => {
+          ctx.strokeStyle = 'rgba(200, 200, 200, 0.7)';
+          ctx.lineWidth = 1.2;
+          //Simultaneity Line
+          let u_ct_1 = mapCoords(minVal, ev.ct), u_ct_2 = mapCoords(maxVal, ev.ct);
+          ctx.beginPath(); ctx.moveTo(u_ct_1.x, u_ct_1.y); ctx.lineTo(u_ct_2.x, u_ct_2.y); ctx.stroke();
+          activeSimultaneityLines.push({
+            p1: u_ct_1, p2: u_ct_2, frame: '\\mathcal{O}_{\\text{tunnel}}', type: `Simultaneity Line (${name})`, label: 'ct', value: ev.ct
+          });
+
+          ctx.strokeStyle = 'rgba(255, 107, 107, 0.85)';
+          let p_ct_1 = mapCoords(gamma * (minVal + beta * ev.ctp), gamma * (ev.ctp + beta * minVal));
+          let p_ct_2 = mapCoords(gamma * (maxVal + beta * ev.ctp), gamma * (ev.ctp + beta * maxVal));
+          ctx.beginPath(); ctx.moveTo(p_ct_1.x, p_ct_1.y); ctx.lineTo(p_ct_2.x, p_ct_2.y); ctx.stroke();
+          activeSimultaneityLines.push({
+            p1: p_ct_1, p2: p_ct_2, frame: "\\mathcal{O}'_{\\text{train}}", type: `Simultaneity Line (${name})`, label: "ct'", value: ev.ctp
+          });
+
+        // Position Line
+        /*
+          let u_x_1 = mapCoords(ev.x, minVal), u_x_2 = mapCoords(ev.x, maxVal);
+          ctx.beginPath(); ctx.moveTo(u_x_1.x, u_x_1.y); ctx.lineTo(u_x_2.x, u_x_2.y); ctx.stroke();
+          activeSimultaneityLines.push({
+            p1: u_x_1, p2: u_x_2, frame: '\\mathcal{O}_{\\text{tunnel}}', type: `Position Line (${name})`, label: 'x', value: ev.x
+          });
+          let p_x_1 = mapCoords(ev.x- 1/beta * maxVal,ev.ct- 1/beta * maxVal);
+          let p_x_2 = mapCoords(ev.x+ 1/beta * maxVal,ev.ct+ 1/beta * maxVal);
+
+          ctx.beginPath(); ctx.moveTo(p_x_1.x, p_x_1.y); ctx.lineTo(p_x_2.x, p_x_2.y); ctx.stroke();
+          activeSimultaneityLines.push({
+            p1: p_x_1, p2: p_x_2, frame: "\\mathcal{O}'_{\\text{train}}", type: `Position Line (${name})`, label: "x'", value: ev.xp
+          });
+        
+        */
+        });
+        ctx.setLineDash([]);
+      }
+
+      // 7. Interval Connections & ds^2 Calculations
+      if (showBCConnect) {
+        // B–C Spacetime Interval Line & Label
+        let ptB = mapCoords(currentEvents.B.x, currentEvents.B.ct);
+        let ptC = mapCoords(currentEvents.C.x, currentEvents.C.ct);
+        ctx.strokeStyle = '#e056fd';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath(); ctx.moveTo(ptB.x, ptB.y); ctx.lineTo(ptC.x, ptC.y); ctx.stroke();
+
+        const dx_bc = currentEvents.B.x - currentEvents.C.x;
+        const dct_bc = currentEvents.B.ct - currentEvents.C.ct;
+        const ds2_bc = -dct_bc * dct_bc + dx_bc * dx_bc;
+
+        ctx.fillStyle = '#e056fd';
+        ctx.font = 'bold 11px sans-serif';
+        let midBC_X = (ptB.x + ptC.x) / 2 + 6;
+        let midBC_Y = (ptB.y + ptC.y) / 2;
+        ctx.fillText(`Δs²(BC) = ${ds2_bc.toFixed(1)} m²`, midBC_X, midBC_Y);
+
+        // B–E Spacetime Interval Line & Label (if Event E is visible)
+        if (currentEvents.E.visible) {
+          let ptE = mapCoords(currentEvents.E.x, currentEvents.E.ct);
+          ctx.strokeStyle = '#ff9ff3';
+          ctx.beginPath(); ctx.moveTo(ptB.x, ptB.y); ctx.lineTo(ptE.x, ptE.y); ctx.stroke();
+
+          const dx_be = currentEvents.E.x - currentEvents.B.x;
+          const dct_be = currentEvents.E.ct - currentEvents.B.ct;
+          const ds2_be = -dct_be * dct_be + dx_be * dx_be;
+
+          ctx.fillStyle = '#ff9ff3';
+          let midBE_X = (ptB.x + ptE.x) / 2 + 6;
+          let midBE_Y = (ptB.y + ptE.y) / 2 - 6;
+          ctx.fillText(`Δs²(BE) = ${ds2_be.toFixed(1)} m²`, midBE_X, midBE_Y);
+        }
+
+        ctx.setLineDash([]);
+      }
+
+      // 8. Sinusoidal Light Signal Propagation
+      if (showSignals) {
+        if (showYellow) {
+          let pt_C = mapCoords(currentEvents.C.x, currentEvents.C.ct);
+          let pt_D = mapCoords(currentEvents.D.x, currentEvents.D.ct);
+          drawSineSignalLine(pt_C, pt_D, '#f1c40f');
+        }
+        if (showCyan) {
+          let pt_B = mapCoords(currentEvents.B.x, currentEvents.B.ct);
+          let pt_E = mapCoords(currentEvents.E.x, currentEvents.E.ct);
+          drawSineSignalLine(pt_B, pt_E, '#00d2d3');
+        }
+      }
+
+      // 9. Main Axes
+      if (showAxes) {
+        //c line
+        ctx.strokeStyle = '#f39c12';
+        ctx.lineWidth = 1.8;
+        ctx.setLineDash([6, 4]);
+        let cLineStart = mapCoords(0, 0);
+        let cLineEnd = mapCoords(400, 400);
+        //-c line
+        ctx.beginPath(); ctx.moveTo(cLineStart.x, cLineStart.y); ctx.lineTo(cLineEnd.x, cLineEnd.y); ctx.stroke();
+        cLineStart = mapCoords(0, 0);
+        cLineEnd = mapCoords(-400, 400);
+        ctx.beginPath(); ctx.moveTo(cLineStart.x, cLineStart.y); ctx.lineTo(cLineEnd.x, cLineEnd.y); ctx.stroke();        
+        ctx.setLineDash([]);
+
+      }
+
+      // 10. Event Markers & Symbols
+      if (showEvents){
+        drawEventMarker(mapCoords(currentEvents.A.x, currentEvents.A.ct), 'A', '#e74c3c');
+        drawEventMarker(mapCoords(currentEvents.B.x, currentEvents.B.ct), 'B', '#e67e22',true);
+        drawEventMarker(mapCoords(currentEvents.C.x, currentEvents.C.ct), 'C', '#9b59b6');
+        if (showYellow) drawEventMarker(mapCoords(currentEvents.D.x, currentEvents.D.ct), 'D', '#2ecc71');
+        if (showCyan) drawEventMarker(mapCoords(currentEvents.E.x, currentEvents.E.ct), 'E', '#00d2d3');
+      }
+
+    }
+
+    [
+      betaInput, trainInput, tunnelInput, scenarioSelect, axisSelect,
+      canvasWInput, canvasHInput, zoomInput, showUnprimedGridCheck,
+      showPrimedGridCheck, showAxesCheck, showEventsCheck, showTrainCheck, showTunnelCheck,
+      showSignalsCheck, showLinesCheck, showBCConnectCheck, symbolToggleCheck
+    ].forEach(el => {
+      el.addEventListener('input', () => {
+        draw();
+        if (window.MathJax) MathJax.typesetPromise([
+          document.getElementById('controlsContainer'),
+          document.getElementById('legendContainer'),
+          document.getElementById('captionContainer')
+        ]);
+      });
+    });
+
+    draw();
+  </script>
+</body>
+</html>
