@@ -411,9 +411,11 @@
       
       <!-- Rotor Configuration Panel -->
       <div class="panel">
+        
         <div class="panel-title">
           <span>Rotor Rack & Position Settings</span>
           <button class="btn btn-reset" onclick="resetMachine()">Reset Machine</button>
+          <button class="btn btn-reset" onclick="clearText()">Clear</button>
         </div>
         <div class="rotor-rack">
           
@@ -705,6 +707,7 @@
         stepRotors();
         let res = processSignal(char);
         cipherText += res.finalChar;
+      }
       applyDayKey(day);
       
       // Reset Live typed output
@@ -718,7 +721,6 @@
       msgContent.innerText = cipherText;
 
       drawSchematic();
-      }
     }
 
     function initUI() {
@@ -795,7 +797,8 @@
       if (stepLeft) rotorPositions[0] = (rotorPositions[0] + 1) % 26;
       if (stepMid)  rotorPositions[1] = (rotorPositions[1] + 1) % 26;
       if (stepRight) rotorPositions[2] = (rotorPositions[2] + 1) % 26;
-
+      //console.log(activeSlots[2],activeSlots[1],activeSlots[0]);
+      //console.log(rotorPositions[0], rotorPositions[1], rotorPositions[2]);
       updateRotorPosDisplay();
     }
 
@@ -1313,6 +1316,7 @@
         highlightNode(cols.lampboard, lampVal, '#ffeb3b');
       }
     }
+    function clearText(){document.getElementById('liveDecodedOutput').innerText = "";outputText = "";}
   </script>
 </body>
 </html>
