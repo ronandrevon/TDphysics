@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Enigma I Interactive Simulator & Schematics</title>
+  <style>
+    :root {
+      --bg-color: #181818;
+      --panel-bg: #242424;
+      --accent-gold: #d4af37;
+      --lamp-off: #2c2c1e;
+      --lamp-on: #ffeb3b;
+      --text-main: #e0e0e0;
+      --border-color: #3d3d3d;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--accent-gold);
+      font-family: 'Courier New', Courier, monospace;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .top-banner {
+      width: 100%;
+      max-width: 1500px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .daily-msg-box {
+      width: 100%;
+      background: #111;
+      border: 2px solid var(--accent-gold);
+      border-radius: 6px;
+      padding: 12px 18px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .daily-msg-title {
+      font-size: 0.85em;
+      color: #aaa;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .daily-msg-content {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 1.2em;
+      color: var(--accent-gold);
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-align: center;
+      word-break: break-all;
+    }
+
+    .live-decoded-box {
+      width: 100%;
+      background: #181818;
+      border: 1px dashed var(--accent-gold);
+      border-radius: 4px;
+      padding: 8px 12px;
+      margin-top: 4px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .live-decoded-title {
+      font-size: 0.75em;
+      color: #888;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .live-decoded-content {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 1.1em;
+      color: #00e5ff;
+      font-weight: bold;
+      letter-spacing: 2px;
+      min-height: 1.3em;
+      word-break: break-all;
+      text-align: center;
+    }
+
+    /* Main Grid Layout */
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 20px;
+      max-width: 1500px;
+      width: 100%;
+    }
+
+    .left-column {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .right-column {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .full-width-section {
+      width: 100%;
+      max-width: 1500px;
+    }
+
+    .panel {
+      background-color: var(--panel-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      padding: 15px 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    }
+
+    .panel-title {
+      font-weight: bold;
+      color: var(--accent-gold);
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 5px;
+      text-transform: uppercase;
+      font-size: 0.9em;
+      letter-spacing: 1px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Rotor Control Section */
+    .rotor-rack {
+      display: flex;
+      gap: 30px;
+      justify-content: space-around;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .rotor-pool, .rotor-slots {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .rotor-slot, .rotor-item {
+      width: 65px;
+      height: 75px;
+      border: 2px dashed var(--accent-gold);
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 1.2em;
+      background: #1a1a1a;
+      user-select: none;
+      box-sizing: border-box;
+    }
+
+    .rotor-item {
+      border: 2px solid var(--accent-gold);
+      background: #3b3b28;
+      color: var(--accent-gold);
+      cursor: grab;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+    }
+
+    .rotor-item:active {
+      cursor: grabbing;
+    }
+
+    .rotor-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .rotor-pos-input {
+      width: 46px;
+      text-align: center;
+      background: #111;
+      color: var(--accent-gold);
+      border: 1px solid var(--border-color);
+      font-size: 1em;
+      font-weight: bold;
+      border-radius: 4px;
+      padding: 2px;
+    }
+
+    .btn {
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+      padding: 6px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: #444;
+    }
+
+    .btn-reset {
+      background: #8b0000;
+      border-color: #a00;
+    }
+
+    .btn-reset:hover {
+      background: #a00000;
+    }
+
+    /* Canvas Schematic */
+    #schematicCanvas {
+      width: 100%;
+      height: 520px;
+      background-color: #111;
+      border-radius: 6px;
+      border: 1px solid #333;
+      display: block;
+    }
+
+    /* Keyboard & Lampboard */
+    .board-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+      margin: 5px 0;
+    }
+
+    .keyboard-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .lamp {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--lamp-off);
+      color: #555;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 1.1em;
+      border: 2px solid #444;
+      box-shadow: inset 0 0 5px #000;
+      transition: all 0.15s ease;
+    }
+
+    .lamp.active {
+      background: var(--lamp-on);
+      color: #000;
+      border-color: #fff;
+      box-shadow: 0 0 18px var(--lamp-on), inset 0 0 5px #fff;
+    }
+
+    .key-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #333, #222);
+      color: #ccc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 1.1em;
+      border: 2px solid #555;
+      cursor: pointer;
+      box-shadow: 0 3px 5px rgba(0,0,0,0.5);
+      user-select: none;
+    }
+
+    .key-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+      background: #444;
+    }
+
+    /* Plugboard */
+    .plugboard-grid {
+      display: grid;
+      grid-template-columns: repeat(13, 1fr);
+      gap: 8px;
+      justify-items: center;
+    }
+
+    .plug-pair {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.8em;
+    }
+
+    .plug-socket {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #111;
+      border: 2px solid #555;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      font-weight: bold;
+      color: #aaa;
+      transition: all 0.15s;
+    }
+
+    .plug-socket.selected {
+      border-color: var(--accent-gold);
+      background: #ffffff !important;
+      color: #000 !important;
+      box-shadow: 0 0 8px #fff;
+    }
+
+    /* Daily Key Sheet Table */
+    .key-table-container {
+      max-height: 520px;
+      overflow-y: auto;
+      border: 1px solid #333;
+      border-radius: 4px;
+    }
+
+    .key-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.75em;
+      text-align: center;
+    }
+
+    .key-table th, .key-table td {
+      border: 1px solid #333;
+      padding: 6px 4px;
+    }
+
+    .key-table th {
+      background-color: #1a1a1a;
+      color: var(--accent-gold);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .key-table tr.active-day {
+      background-color: #3b3310;
+      color: var(--accent-gold);
+      font-weight: bold;
+    }
+
+    .key-table tr:hover {
+      background-color: #2a2a2a;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-banner">
+    <h1>Enigma I Machine Simulator</h1>
+    
+    <!-- ENCRYPTED DAILY MESSAGE & LIVE DECODED MESSAGE -->
+    <div class="daily-msg-box" id="dailyMsgBox">
+      <div class="daily-msg-title" id="dailyMsgTitle">Encrypted Daily Transmission</div>
+      <div class="daily-msg-content" id="dailyMsgContent">---</div>
+      
+      <div class="live-decoded-box">
+        <div class="live-decoded-title">Live Typed Output / Decoded Message</div>
+        <div class="live-decoded-content" id="liveDecodedOutput"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    
+    <!-- LEFT COLUMN: RACK, KEYBOARD, PLUGBOARD -->
+    <div class="left-column">
+      
+      <!-- Rotor Configuration Panel -->
+      <div class="panel">
+        <div class="panel-title">
+          <span>Rotor Rack & Position Settings</span>
+          <button class="btn btn-reset" onclick="resetMachine()">Reset Machine</button>
+        </div>
+        <div class="rotor-rack">
+          
+          <div>
+            <div style="font-size: 0.8em; margin-bottom: 6px; text-align: center; color: #aaa;">AVAILABLE ROTORS</div>
+            <div class="rotor-pool" id="rotorPool"></div>
+          </div>
+
+          <div>
+            <div style="font-size: 0.8em; margin-bottom: 6px; text-align: center; color: #aaa;">SLOTS (LEFT / MIDDLE / RIGHT)</div>
+            <div class="rotor-slots">
+              <!-- Slot 0 (Left) -->
+              <div class="rotor-slot-container">
+                <div class="rotor-slot" id="slot-0" data-slot="0"></div>
+                <div class="rotor-controls">
+                  <input type="number" id="pos-0" class="rotor-pos-input" value="01" min="1" max="26" onchange="handleNumericInput(0, this.value)">
+                  <div style="display:flex; gap: 2px;">
+                    <button class="btn" style="padding: 1px 6px;" onclick="stepRotorManual(0, 1)">▲</button>
+                    <button class="btn" style="padding: 1px 6px;" onclick="stepRotorManual(0, -1)">▼</button>
+                  </div>
+                </div>
+              </div>
+              <!-- Slot 1 (Middle) -->
+              <div class="rotor-slot-container">
+                <div class="rotor-slot" id="slot-1" data-slot="1"></div>
+                <div class="rotor-controls">
+                  <input type="number" id="pos-1" class="rotor-pos-input" value="01" min="1" max="26" onchange="handleNumericInput(1, this.value)">
+                  <div style="display:flex; gap: 2px;">
+                    <button class="btn" style="padding: 1px 6px;" onclick="stepRotorManual(1, 1)">▲</button>
+                    <button class="btn" style="padding: 1px 6px;" onclick="stepRotorManual(1, -1)">▼</button>
+                  </div>
+                </div>
+              </div>
+              <!-- Slot 2 (Right) -->
+              <div class="rotor-slot-container">
+                <div class="rotor-slot" id="slot-2" data-slot="2"></div>
+                <div class="rotor-controls">
+                  <input type="number" id="pos-2" class="rotor-pos-input" value="01" min="1" max="26" onchange="handleNumericInput(2, this.value)">
+                  <div style="display:flex; gap: 2px;">
+                    <button class="btn" style="padding: 1px 6px;" onclick="stepRotorManual(2, 1)">▲</button>
+                    <button class="btn" style="padding: 1px 6px;" onclick="stepRotorManual(2, -1)">▼</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Lampboard & Keyboard -->
+      <div class="panel">
+        <div class="panel-title">Lampboard & Keyboard</div>
+        <div class="board-grid">
+          <!-- Lamps -->
+          <div id="lampboard">
+            <div class="keyboard-row" id="lamp-row-1"></div>
+            <div class="keyboard-row" id="lamp-row-2" style="margin-top: 5px;"></div>
+            <div class="keyboard-row" id="lamp-row-3" style="margin-top: 5px;"></div>
+          </div>
+          
+          <div style="height: 12px;"></div>
+
+          <!-- Keyboard Keys -->
+          <div id="keyboard">
+            <div class="keyboard-row" id="key-row-1"></div>
+            <div class="keyboard-row" id="key-row-2" style="margin-top: 5px;"></div>
+            <div class="keyboard-row" id="key-row-3" style="margin-top: 5px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Plugboard -->
+      <div class="panel">
+        <div class="panel-title">
+          <span>Plugboard (Steckerbrett)</span>
+          <span style="font-size: 0.8em; color: #888;">Click two sockets to pair/unpair</span>
+        </div>
+        <div class="plugboard-grid" id="plugboardGrid"></div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: DAILY KEY SHEET TABLE -->
+    <div class="right-column">
+      <div class="panel" style="height: 100%; box-sizing: border-box;">
+        <div class="panel-title">
+          <span>Enigma Daily Key Sheet</span>
+          <span style="font-size: 0.75em; color: #aaa;">(Tagesschlüssel)</span>
+        </div>
+        <div class="key-table-container">
+          <table class="key-table">
+            <thead>
+              <tr>
+                <th>Day</th>
+                <th>Rotors</th>
+                <th>Pos</th>
+                <th>Plugboard Pairs</th>
+              </tr>
+            </thead>
+            <tbody id="dailyKeyTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM FULL-WIDTH PANEL: ELECTRICAL SCHEMATIC CANVAS -->
+  <div class="full-width-section">
+    <div class="panel">
+      <div class="panel-title">
+        <span>Integrated Electrical Pathway & Reflector Schematic</span>
+        <span id="pathTraceLabel" style="color: #aaa; font-weight: normal; font-size: 0.85em;">Press a key to trace signal</span>
+      </div>
+      <canvas id="schematicCanvas" width="1450" height="520"></canvas>
+    </div>
+  </div>
+
+  <script>
+    // --- COLOR PALETTE FOR PLUGBOARD PAIRS ---
+    const PLUG_COLORS = [
+      '#FF5722', // Deep Orange
+      '#00E676', // Bright Green
+      '#E040FB', // Neon Purple
+      '#FFD600', // Yellow
+      '#00B0FF', // Light Blue
+      '#FF1744', // Red
+      '#1DE9B6', // Teal
+      '#FF9100', // Amber
+      '#AEEA00', // Lime
+      '#F48FB1'  // Pink
+    ];
+
+    // --- ENIGMA DATA ---
+    const ROTOR_SPECS = {
+      'I':   { wiring: "EKMFLGDQVZNTOWYHXUSPAIBRCJ", notch: 'Q' },
+      'II':  { wiring: "AJDKSIRUXBLHWTMCQGZNPYFVOE", notch: 'E' },
+      'III': { wiring: "BDFHJLCPRTXVZNYEIWGAKMUSQO", notch: 'V' },
+      'IV':  { wiring: "ESOVPZJAYQUIRHXLNFTGKDCMWB", notch: 'J' },
+      'V':   { wiring: "VZBRGITYUPSDNHLXAWMJQOFECK", notch: 'Z' }
+    };
+
+    const REFLECTOR_B = "YRUHQSLDPXNGOKMIEBFZCWVJAT";
+
+    // --- STATE ---
+    let activeSlots = ['I', 'II', 'III'];
+    let rotorPositions = [0, 0, 0];
+    let plugboardPairs = {};
+    let selectedPlugSocket = null;
+    let outputText = "";
+    let activeTrace = null;
+    let dailyKeys = {};
+    let currentSelectedDay = null;
+
+    // --- INITIALIZATION ---
+    window.addEventListener('DOMContentLoaded', () => {
+      generateDailyKeySheet();
+      initUI();
+      initDragAndDrop();
+      
+      // Initialize with Today's Encrypted Message
+      const today = new Date().getDate();
+      sendDailyEncryptedMessage(today);
+    });
+
+    // Generate Deterministic Daily Key Sheet for Days 01-31
+    function generateDailyKeySheet() {
+      const rotorCombos = [
+        ['I','II','III'], ['I','III','II'], ['II','I','III'], ['II','III','I'], 
+        ['III','I','II'], ['III','II','I'], ['IV','I','III'], ['V','II','IV'],
+        ['I','IV','V'],   ['III','IV','I'], ['V','I','II'],   ['IV','V','III']
+      ];
+
+      const plugPool = ["AM","FI","NV","BZ","CD","EG","HK","LO","PR","ST","QX","UY","JW"];
+
+      for (let day = 1; day <= 31; day++) {
+        let rIdx = (day * 3 + 5) % rotorCombos.length;
+        let pos1 = ((day * 7) % 26) + 1;
+        let pos2 = ((day * 11) % 26) + 1;
+        let pos3 = ((day * 13) % 26) + 1;
+
+        let pairsCount = 5 + (day % 2);
+        let pairs = [];
+        for (let p = 0; p < pairsCount; p++) {
+          pairs.push(plugPool[(day + p * 2) % plugPool.length]);
+        }
+
+        dailyKeys[day] = {
+          rotors: rotorCombos[rIdx],
+          positions: [pos1, pos2, pos3],
+          plugs: pairs
+        };
+      }
+
+      renderDailyKeyTable();
+    }
+
+    function renderDailyKeyTable() {
+      const tbody = document.getElementById('dailyKeyTableBody');
+      tbody.innerHTML = '';
+      const today = new Date().getDate();
+
+      for (let day = 1; day <= 31; day++) {
+        const k = dailyKeys[day];
+        const tr = document.createElement('tr');
+        tr.id = `key-row-day-${day}`;
+        if (day === (currentSelectedDay || today)) tr.className = 'active-day';
+
+        const dayStr = String(day).padStart(2, '0');
+        const posStr = k.positions.map(p => String(p).padStart(2, '0')).join(' ');
+        const plugsStr = k.plugs.join(' ');
+
+        tr.innerHTML = `
+          <td>${dayStr}</td>
+          <td>${k.rotors.join(' ')}</td>
+          <td>${posStr}</td>
+          <td style="font-size: 0.9em;">${plugsStr}</td>
+        `;
+
+        tr.onclick = () => {
+          sendDailyEncryptedMessage(day);
+        };
+        tbody.appendChild(tr);
+      }
+    }
+
+    function applyDayKey(day) {
+      currentSelectedDay = day;
+      const k = dailyKeys[day];
+      activeSlots = [...k.rotors];
+      rotorPositions = k.positions.map(p => p - 1);
+      
+      plugboardPairs = {};
+      k.plugs.forEach(pair => {
+        let a = pair[0];
+        let b = pair[1];
+        plugboardPairs[a] = b;
+        plugboardPairs[b] = a;
+      });
+
+      // Highlight active row in table
+      document.querySelectorAll('.key-table tr').forEach(tr => tr.classList.remove('active-day'));
+      const activeRow = document.getElementById(`key-row-day-${day}`);
+      if (activeRow) activeRow.classList.add('active-day');
+
+      renderRotorRack();
+      updateRotorPosDisplay();
+      updatePlugboardUI();
+      drawSchematic();
+    }
+
+    function getOrdinalSuffix(i) {
+      let j = i % 10, k = i % 100;
+      if (j === 1 && k !== 11) return "ST";
+      if (j === 2 && k !== 12) return "ND";
+      if (j === 3 && k !== 13) return "RD";
+      return "TH";
+    }
+
+    function getPairColor(char) {
+      if (!plugboardPairs[char]) return null;
+      const keys = Object.keys(plugboardPairs).sort();
+      let uniquePairs = [];
+      keys.forEach(k => {
+        let v = plugboardPairs[k];
+        let pairStr = k < v ? k + v : v + k;
+        if (!uniquePairs.includes(pairStr)) uniquePairs.push(pairStr);
+      });
+      let pairedWith = plugboardPairs[char];
+      let currentPairStr = char < pairedWith ? char + pairedWith : pairedWith + char;
+      let pairIdx = uniquePairs.indexOf(currentPairStr);
+      return PLUG_COLORS[pairIdx % PLUG_COLORS.length];
+    }
+
+    function sendDailyEncryptedMessage(day) {
+      applyDayKey(day);
+
+      const daySuffix = getOrdinalSuffix(day);
+      const plaintext = `TODAYXISX${day}${daySuffix}XDAYXOFXTHEXMONTH`;
+      
+      let cipherText = "";
+      for (let char of plaintext) {
+        stepRotors();
+        let res = processSignal(char);
+        cipherText += res.finalChar;
+      }
+      
+      // Reset Live typed output
+      outputText = "";
+      document.getElementById('liveDecodedOutput').innerText = "";
+
+      const msgTitle = document.getElementById('dailyMsgTitle');
+      const msgContent = document.getElementById('dailyMsgContent');
+
+      msgTitle.innerText = `Encrypted Transmission for Day ${String(day).padStart(2, '0')} (Plaintext: "${plaintext}")`;
+      msgContent.innerText = cipherText;
+
+      drawSchematic();
+    }
+
+    function initUI() {
+      const rows = [
+        ["Q", "W", "E", "R", "T", "Z", "U", "I", "O"],
+        ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
+        ["P", "Y", "X", "C", "V", "B", "N", "M"]
+      ];
+
+      rows.forEach((row, rIdx) => {
+        const lampRow = document.getElementById(`lamp-row-${rIdx+1}`);
+        const keyRow = document.getElementById(`key-row-${rIdx+1}`);
+
+        row.forEach(char => {
+          const lamp = document.createElement('div');
+          lamp.className = 'lamp';
+          lamp.id = `lamp-${char}`;
+          lamp.innerText = char;
+          lampRow.appendChild(lamp);
+
+          const key = document.createElement('button');
+          key.className = 'key-btn';
+          key.innerText = char;
+          key.onclick = () => handleKeyPress(char);
+          keyRow.appendChild(key);
+        });
+      });
+
+      document.addEventListener('keydown', (e) => {
+        const char = e.key.toUpperCase();
+        if (/^[A-Z]$/.test(char) && !e.repeat) {
+          handleKeyPress(char);
+        }
+      });
+
+      const plugGrid = document.getElementById('plugboardGrid');
+      for (let i = 0; i < 26; i++) {
+        const char = String.fromCharCode(65 + i);
+        const pairDiv = document.createElement('div');
+        pairDiv.className = 'plug-pair';
+
+        const socket = document.createElement('div');
+        socket.className = 'plug-socket';
+        socket.id = `plug-${char}`;
+        socket.innerText = char;
+        socket.onclick = () => handlePlugClick(char);
+
+        pairDiv.appendChild(socket);
+        plugGrid.appendChild(pairDiv);
+      }
+    }
+
+    // --- ENIGMA LOGIC ---
+    function stepRotors() {
+      const rightRotor = ROTOR_SPECS[activeSlots[2]];
+      const midRotor = ROTOR_SPECS[activeSlots[1]];
+
+      const rightNotch = (rightRotor.notch.charCodeAt(0) - 65);
+      const midNotch = (midRotor.notch.charCodeAt(0) - 65);
+
+      let stepLeft = false;
+      let stepMid = false;
+      let stepRight = true;
+
+      if (rotorPositions[1] === midNotch) {
+        stepLeft = true;
+        stepMid = true;
+      }
+
+      if (rotorPositions[2] === rightNotch) {
+        stepMid = true;
+      }
+
+      if (stepLeft) rotorPositions[0] = (rotorPositions[0] + 1) % 26;
+      if (stepMid)  rotorPositions[1] = (rotorPositions[1] + 1) % 26;
+      if (stepRight) rotorPositions[2] = (rotorPositions[2] + 1) % 26;
+
+      updateRotorPosDisplay();
+    }
+
+    function processSignal(char) {
+      console.log(rotorPositions);
+      let trace = { forward: [], reverse: [], key: char };
+      let c = char.charCodeAt(0) - 65;
+
+      trace.forward.push({ stage: 'Key', val: c, char: String.fromCharCode(c + 65) });
+
+      // 1. Plugboard In
+      let pluggedChar = plugboardPairs[String.fromCharCode(c + 65)];
+      if (pluggedChar) c = pluggedChar.charCodeAt(0) - 65;
+      trace.forward.push({ stage: 'Plug In', val: c, char: String.fromCharCode(c + 65) });
+
+      // 2. Rotors Right to Left (3 -> 2 -> 1)
+      for (let i = 2; i >= 0; i--) {
+        const rSpec = ROTOR_SPECS[activeSlots[i]];
+        const pos = rotorPositions[i];
+        
+        let shiftIn = (c + pos+26) % 26;        
+        let mappedChar = rSpec.wiring[shiftIn];        
+        let mappedVal = mappedChar.charCodeAt(0) - 65;
+        let outVal = (mappedVal - pos + 26) % 26;
+
+        trace.forward.push({ 
+          stage: `Rotor ${3-i}`, 
+          inVal: c, char_in: String.fromCharCode(c + 65) ,
+          shiftIn: shiftIn, char_shift: String.fromCharCode(shiftIn + 65) ,
+          shiftOut: mappedVal, char_mapped: String.fromCharCode(mappedVal + 65) ,
+          val: outVal, 
+          char: String.fromCharCode(outVal + 65) 
+        });
+        c = outVal;
+      }
+
+      // 3. Reflector
+      let refIn = c;
+      let refOutChar = REFLECTOR_B[refIn];
+      c = refOutChar.charCodeAt(0) - 65;
+      trace.reflector = { in: refIn, out: c, inChar: String.fromCharCode(refIn + 65), outChar: String.fromCharCode(c + 65) };
+
+      // 4. Rotors Left to Right (1 -> 2 -> 3)
+      trace.reverse.push({ stage: 'Reflector Out', val: c, char: String.fromCharCode(c + 65) });
+      for (let i = 0; i <= 2; i++) {
+        const rSpec = ROTOR_SPECS[activeSlots[i]];
+        const pos = rotorPositions[i];
+        
+        let shiftIn = (c - pos + 26) % 26;
+        let charInWired = String.fromCharCode(65 + shiftIn);
+        let mappedVal = rSpec.wiring.indexOf(charInWired);
+        let outVal = (mappedVal + pos + 26) % 26;
+
+        trace.reverse.push({ 
+          stage: `Rotor ${i+1}`, 
+          inVal: c, 
+          shiftIn: shiftIn, 
+          shiftOut: mappedVal, 
+          val: outVal, 
+          char: String.fromCharCode(outVal + 65) 
+        });
+        c = outVal;
+      }
+
+      // 5. Plugboard Out / Lamp
+      pluggedChar = plugboardPairs[String.fromCharCode(c + 65)];
+      if (pluggedChar) c = pluggedChar.charCodeAt(0) - 65;
+      trace.reverse.push({ stage: 'Plug Out', val: c, char: String.fromCharCode(c + 65) });
+
+      console.log(trace);
+      return { finalChar: String.fromCharCode(c + 65), trace: trace };
+    }
+
+    function handleKeyPress(char) {
+      stepRotors();
+
+      const result = processSignal(char);
+      const outChar = result.finalChar;
+
+      outputText += outChar;
+      document.getElementById('liveDecodedOutput').innerText = outputText;
+
+      document.querySelectorAll('.lamp').forEach(l => l.classList.remove('active'));
+      const activeLamp = document.getElementById(`lamp-${outChar}`);
+      if (activeLamp) activeLamp.classList.add('active');
+
+      activeTrace = result.trace;
+      drawSchematic();
+    }
+
+    // --- CONTROLS & DISPLAY ---
+    function handleNumericInput(slotIdx, val) {
+      let num = parseInt(val, 10);
+      if (isNaN(num) || num < 1) num = 1;
+      if (num > 26) num = 26;
+      rotorPositions[slotIdx] = num - 1;
+      updateRotorPosDisplay();
+      drawSchematic();
+    }
+
+    function stepRotorManual(slotIdx, dir) {
+      rotorPositions[slotIdx] = (rotorPositions[slotIdx] + dir + 26) % 26;
+      updateRotorPosDisplay();
+      drawSchematic();
+    }
+
+    function updateRotorPosDisplay() {
+      for (let i = 0; i < 3; i++) {
+        const displayVal = String(rotorPositions[i] + 1).padStart(2, '0');
+        document.getElementById(`pos-${i}`).value = displayVal;
+      }
+    }
+
+    function resetMachine() {
+      activeSlots = ['I', 'II', 'III'];
+      rotorPositions = [0, 0, 0];
+      plugboardPairs = {};
+      selectedPlugSocket = null;
+      outputText = "";
+      activeTrace = null;
+      
+      document.getElementById('liveDecodedOutput').innerText = "";
+      renderRotorRack();
+      updateRotorPosDisplay();
+      updatePlugboardUI();
+      document.querySelectorAll('.lamp').forEach(l => l.classList.remove('active'));
+      drawSchematic();
+    }
+
+    function handlePlugClick(char) {
+      if (!selectedPlugSocket) {
+        if (plugboardPairs[char]) {
+          const paired = plugboardPairs[char];
+          delete plugboardPairs[char];
+          delete plugboardPairs[paired];
+          updatePlugboardUI();
+          drawSchematic();
+          return;
+        }
+        selectedPlugSocket = char;
+      } else {
+        if (selectedPlugSocket !== char) {
+          if (plugboardPairs[selectedPlugSocket]) delete plugboardPairs[plugboardPairs[selectedPlugSocket]];
+          if (plugboardPairs[char]) delete plugboardPairs[plugboardPairs[char]];
+
+          plugboardPairs[selectedPlugSocket] = char;
+          plugboardPairs[char] = selectedPlugSocket;
+        }
+        selectedPlugSocket = null;
+      }
+      updatePlugboardUI();
+      drawSchematic();
+    }
+
+    function updatePlugboardUI() {
+      document.querySelectorAll('.plug-socket').forEach(socket => {
+        const char = socket.innerText;
+        socket.classList.remove('selected');
+        
+        const pairColor = getPairColor(char);
+        if (pairColor) {
+          socket.style.background = pairColor;
+          socket.style.color = "#000";
+          socket.style.borderColor = pairColor;
+        } else {
+          socket.style.background = "#111";
+          socket.style.color = "#aaa";
+          socket.style.borderColor = "#555";
+        }
+
+        if (selectedPlugSocket === char) {
+          socket.classList.add('selected');
+        }
+      });
+    }
+
+    // --- DRAG AND DROP ---
+    function initDragAndDrop() {
+      renderRotorRack();
+
+      document.querySelectorAll('.rotor-slot').forEach(slot => {
+        slot.addEventListener('dragover', e => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+        });
+        
+        slot.addEventListener('drop', e => {
+          e.preventDefault();
+          const rotorType = e.dataTransfer.getData('text/plain');
+          const targetSlotIdx = parseInt(slot.dataset.slot);
+          
+          if (rotorType && !isNaN(targetSlotIdx)) {
+            const currentSlotIdx = activeSlots.indexOf(rotorType);
+            if (currentSlotIdx !== -1) {
+              activeSlots[currentSlotIdx] = activeSlots[targetSlotIdx];
+            }
+            activeSlots[targetSlotIdx] = rotorType;
+            renderRotorRack();
+            drawSchematic();
+          }
+        });
+      });
+
+      const poolArea = document.getElementById('rotorPool');
+      poolArea.addEventListener('dragover', e => e.preventDefault());
+      poolArea.addEventListener('drop', e => {
+        e.preventDefault();
+        const rotorType = e.dataTransfer.getData('text/plain');
+        const idx = activeSlots.indexOf(rotorType);
+        if (idx !== -1) {
+          const unused = Object.keys(ROTOR_SPECS).find(r => !activeSlots.includes(r));
+          if (unused) activeSlots[idx] = unused;
+          renderRotorRack();
+          drawSchematic();
+        }
+      });
+    }
+
+    function renderRotorRack() {
+      for (let i = 0; i < 3; i++) {
+        const slotEl = document.getElementById(`slot-${i}`);
+        slotEl.innerHTML = '';
+        if (activeSlots[i]) {
+          const rEl = createRotorElement(activeSlots[i]);
+          slotEl.appendChild(rEl);
+        }
+      }
+
+      const poolEl = document.getElementById('rotorPool');
+      poolEl.innerHTML = '';
+      Object.keys(ROTOR_SPECS).forEach(rType => {
+        if (!activeSlots.includes(rType)) {
+          const rEl = createRotorElement(rType);
+          poolEl.appendChild(rEl);
+        }
+      });
+    }
+
+    function createRotorElement(type) {
+      const el = document.createElement('div');
+      el.className = 'rotor-item';
+      el.innerText = type;
+      el.draggable = true;
+      el.id = `rotor-${type}`;
+      
+      el.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', type);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      return el;
+    }
+
+    // --- SCHEMATIC CANVAS WITH DISTINCT PLUGBOARD COLORS & LETTER STAGE ANNOTATIONS ---
+    function drawSchematic() {
+      const canvas = document.getElementById('schematicCanvas');
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+
+      ctx.clearRect(0, 0, w, h);
+
+      const cols = {
+        reflector: 120,
+        rotor1: 320,
+        rotor2: 520,
+        rotor3: 720,
+        plugboard: 950,
+        keyboard: 1180,
+        lampboard: 1350
+      };
+
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 12px sans-serif';
+
+      // Reflector Container
+      ctx.fillStyle = '#222';
+      ctx.strokeStyle = '#d4af37';
+      ctx.lineWidth = 2;
+      ctx.fillRect(20, 40, 180, h - 60);
+      ctx.strokeRect(20, 40, 180, h - 60);
+      ctx.fillStyle = '#d4af37';
+      ctx.fillText('REFLECTOR (B)', cols.reflector, 28);
+
+      // Rotors
+      const rotorCols = [
+        { name: `ROTOR 1 (${activeSlots[0]})`, x: cols.rotor1, pos: rotorPositions[0] },
+        { name: `ROTOR 2 (${activeSlots[1]})`, x: cols.rotor2, pos: rotorPositions[1] },
+        { name: `ROTOR 3 (${activeSlots[2]})`, x: cols.rotor3, pos: rotorPositions[2] }
+      ];
+
+      rotorCols.forEach(r => {
+        ctx.fillStyle = '#1c1c1c';
+        ctx.strokeStyle = '#444';
+        ctx.fillRect(r.x - 65, 40, 130, h - 60);
+        ctx.strokeRect(r.x - 65, 40, 130, h - 60);
+        ctx.fillStyle = '#aaa';
+        ctx.fillText(r.name, r.x, 28);
+        ctx.fillStyle = '#d4af37';
+        ctx.fillText(`Pos: ${String(r.pos + 1).padStart(2, '0')}`, r.x, h - 8);
+      });
+
+      // Plugboard Container
+      ctx.fillStyle = '#1c1c1c';
+      ctx.strokeStyle = '#444';
+      ctx.fillRect(cols.plugboard - 60, 40, 120, h - 60);
+      ctx.strokeRect(cols.plugboard - 60, 40, 120, h - 60);
+      ctx.fillStyle = '#aaa';
+      ctx.fillText('PLUGBOARD', cols.plugboard, 28);
+
+      // Keyboard & Lampboard
+      ctx.fillStyle = '#888';
+      ctx.fillText('KEYBOARD', cols.keyboard, 28);
+      ctx.fillText('LAMPBOARD', cols.lampboard, 28);
+
+      // Draw 26 Letter Contacts per Column with Letters
+      const getY = (index) => 50 + (index / 25) * (h - 80);
+
+      const drawContacts = (x, showLetters = false) => {
+        for (let i = 0; i < 26; i++) {
+          const y = getY(i);
+          ctx.beginPath();
+          ctx.arc(x, y, 3, 0, Math.PI * 2);
+          ctx.fillStyle = '#555';
+          ctx.fill();
+
+          if (showLetters) {
+            ctx.fillStyle = '#666';
+            ctx.font = '10px monospace';
+            ctx.fillText(String.fromCharCode(65 + i), x + 15, y + 3);
+          }
+        }
+      };
+
+      Object.values(cols).forEach(x => drawContacts(x, x === cols.keyboard || x === cols.lampboard));
+
+      // 1. REFLECTOR BACKGROUND WIRES
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 26; i++) {
+        let paired = REFLECTOR_B[i].charCodeAt(0) - 65;
+        if (i < paired) {
+          let y1 = getY(i);
+          let y2 = getY(paired);
+          let controlX = cols.reflector - 45 - Math.abs(i - paired) * 2;
+          ctx.beginPath();
+          ctx.strokeStyle = '#333';
+          ctx.moveTo(cols.reflector, y1);
+          ctx.bezierCurveTo(controlX, y1, controlX, y2, cols.reflector, y2);
+          ctx.stroke();
+        }
+      }
+
+      // 2. PLUGBOARD CONNECTIONS (Distinct Matching Colors per Pair)
+      for (let i = 0; i < 26; i++) {
+        const char = String.fromCharCode(65 + i);
+        if (plugboardPairs[char]) {
+          const pairedIdx = plugboardPairs[char].charCodeAt(0) - 65;
+          if (i < pairedIdx) {
+            let y1 = getY(i);
+            let y2 = getY(pairedIdx);
+            let pairColor = getPairColor(char);
+            ctx.beginPath();
+            ctx.strokeStyle = pairColor;
+            ctx.lineWidth = 2;
+            ctx.moveTo(cols.plugboard, y1);
+            ctx.bezierCurveTo(cols.plugboard - 35, y1, cols.plugboard - 35, y2, cols.plugboard, y2);
+            ctx.stroke();
+          }
+        }
+      }
+
+      const drawInternalCurve = (x1, y1, x2, y2, color, lineWidth = 3) => {
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = lineWidth;
+        const midX = (x1 + x2) / 2;
+        ctx.moveTo(x1, y1);
+        ctx.bezierCurveTo(midX, y1, midX, y2, x2, y2);
+        ctx.stroke();
+      };
+
+      // Helper to draw letter badge annotations at stage points
+      const drawStageBadge = (x, y, letter, bgColor, textColor = '#000') => {
+        ctx.save();
+        ctx.font = 'bold 11px monospace';
+        const txtWidth = ctx.measureText(letter).width;
+        const boxWidth = txtWidth + 10;
+        const boxHeight = 16;
+        
+        ctx.fillStyle = bgColor;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+
+        // Rounded rect for badge
+        ctx.beginPath();
+        ctx.roundRect(x - boxWidth/2, y - 22, boxWidth, boxHeight, 3);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = textColor;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(letter, x, y - 14);
+        ctx.restore();
+      };
+
+      // 3. ACTIVE SIGNAL TRAJECTORY & STAGE LETTER ANNOTATIONS
+      if (activeTrace) {
+        document.getElementById('pathTraceLabel').innerText = 
+          `Path: Key(${activeTrace.key}) ➔ Forward ➔ Reflector ➔ Return ➔ Lamp(${activeTrace.reverse[activeTrace.reverse.length-1].char})`;
+
+        // FORWARD PASS
+        let keyVal = activeTrace.forward[0].val;
+        let plugInVal = activeTrace.forward[1].val;
+        
+        ctx.strokeStyle = '#ffeb3b';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(cols.keyboard, getY(keyVal));
+        ctx.lineTo(cols.plugboard, getY(keyVal));
+        ctx.stroke();
+
+        // Key Press Badge
+        drawStageBadge(cols.keyboard, getY(keyVal), activeTrace.forward[0].char, '#ffeb3b', '#000');
+
+        // Plugboard Forward Curve
+        drawInternalCurve(cols.plugboard, getY(keyVal), cols.plugboard, getY(keyVal), '#ffeb3b');
+        drawStageBadge(cols.plugboard, getY(plugInVal), activeTrace.forward[1].char, '#ffeb3b', '#000');
+
+        // Rotors Forward
+        let fwdStages = [
+          { fromCol: cols.plugboard, toCol: cols.rotor3, traceIdx: 2 },
+          { fromCol: cols.rotor3,    toCol: cols.rotor2, traceIdx: 3 },
+          { fromCol: cols.rotor2,    toCol: cols.rotor1, traceIdx: 4 }
+        ];
+
+        fwdStages.forEach(stg => {
+          let step = activeTrace.forward[stg.traceIdx];
+          drawInternalCurve(stg.fromCol, getY(step.inVal), stg.toCol, getY(step.val), '#ffeb3b');
+          drawStageBadge(stg.toCol, getY(step.val), step.char, '#ffeb3b', '#000');
+        });
+
+        // Into Reflector
+        let refIn = activeTrace.reflector.in;
+        let refOut = activeTrace.reflector.out;
+        ctx.beginPath();
+        ctx.moveTo(cols.rotor1, getY(refIn));
+        ctx.lineTo(cols.reflector, getY(refIn));
+        ctx.stroke();
+
+        // Reflector Loop Curve
+        let y1 = getY(refIn);
+        let y2 = getY(refOut);
+        let ctrlX = cols.reflector - 45 - Math.abs(refIn - refOut) * 2;
+        
+        ctx.beginPath();
+        ctx.strokeStyle = '#ffeb3b';
+        ctx.lineWidth = 4;
+        ctx.moveTo(cols.reflector, y1);
+        ctx.bezierCurveTo(ctrlX, y1, ctrlX, y2, cols.reflector, y2);
+        ctx.stroke();
+
+        //ff3d00
+        drawStageBadge(cols.reflector, getY(refIn), activeTrace.reflector.inChar, '#ffeb3b', '#000');
+        drawStageBadge(cols.reflector, getY(refOut), activeTrace.reflector.outChar, '#ffeb3b', '#000');
+
+        // REVERSE PASS
+        ctx.strokeStyle = '#ffeb3b';
+        ctx.lineWidth = 3;
+
+        ctx.beginPath();
+        ctx.moveTo(cols.reflector, getY(refOut));
+        ctx.lineTo(cols.rotor1, getY(refOut));
+        ctx.stroke();
+
+        let revStages = [
+          { fromCol: cols.rotor1, toCol: cols.rotor2, traceIdx: 1 },
+          { fromCol: cols.rotor2, toCol: cols.rotor3, traceIdx: 2 },
+          { fromCol: cols.rotor3, toCol: cols.plugboard, traceIdx: 3 }
+        ];
+
+        revStages.forEach(stg => {
+          let step = activeTrace.reverse[stg.traceIdx];
+          drawInternalCurve(stg.fromCol, getY(step.inVal), stg.toCol, getY(step.val), '#ffeb3b');
+          drawStageBadge(stg.toCol, getY(step.val), step.char, '#ffeb3b', '#000');
+        });
+
+        // Plugboard Reverse Curve
+        let plugOutIn = activeTrace.reverse[3].val;
+        let lampVal = activeTrace.reverse[4].val;
+        drawInternalCurve(cols.plugboard, getY(plugOutIn), cols.plugboard, getY(plugOutIn), '#ffeb3b');
+
+        // Connection to Lampboard
+        ctx.beginPath();
+        ctx.moveTo(cols.plugboard, getY(lampVal));
+        ctx.lineTo(cols.lampboard, getY(lampVal));
+        ctx.stroke();
+
+        drawStageBadge(cols.lampboard, getY(lampVal), activeTrace.reverse[4].char, '#ffeb3b', '#000');
+
+        // Contact Highlights
+        const highlightNode = (x, val, color) => {
+          ctx.beginPath();
+          ctx.arc(x, getY(val), 5, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+        };
+
+        highlightNode(cols.keyboard, keyVal, '#ffeb3b');
+        highlightNode(cols.reflector, refIn, '#ffeb3b');
+        highlightNode(cols.reflector, refOut, '#ffeb3b');
+        highlightNode(cols.lampboard, lampVal, '#ffeb3b');
+      }
+    }
+  </script>
+</body>
+</html>
