@@ -635,7 +635,8 @@
         `;
 
         tr.onclick = () => {
-          sendDailyEncryptedMessage(day);
+          //sendDailyEncryptedMessage(day); // uncomment to autoset the machine on click
+          highlightDay(day);
         };
         tbody.appendChild(tr);
       }
@@ -655,15 +656,19 @@
         plugboardPairs[b] = a;
       });
 
-      // Highlight active row in table
-      document.querySelectorAll('.key-table tr').forEach(tr => tr.classList.remove('active-day'));
-      const activeRow = document.getElementById(`key-row-day-${day}`);
-      if (activeRow) activeRow.classList.add('active-day');
+      highlightDay(day);
 
       renderRotorRack();
       updateRotorPosDisplay();
       updatePlugboardUI();
       drawSchematic();
+    }
+
+    function highlightDay(day){
+      // Highlight active row in table
+      document.querySelectorAll('.key-table tr').forEach(tr => tr.classList.remove('active-day'));
+      const activeRow = document.getElementById(`key-row-day-${day}`);
+      if (activeRow) activeRow.classList.add('active-day');
     }
 
     function getOrdinalSuffix(i) {
@@ -693,14 +698,14 @@
       applyDayKey(day);
 
       const daySuffix = getOrdinalSuffix(day);
-      const plaintext = `TODAYXISX${day}${daySuffix}XDAYXOFXTHEXMONTH`;
+      const plaintext = `GROSBISOU`;// ${day}$`;//{daySuffix}`
       
       let cipherText = "";
       for (let char of plaintext) {
         stepRotors();
         let res = processSignal(char);
         cipherText += res.finalChar;
-      }
+      applyDayKey(day);
       
       // Reset Live typed output
       outputText = "";
@@ -709,10 +714,11 @@
       const msgTitle = document.getElementById('dailyMsgTitle');
       const msgContent = document.getElementById('dailyMsgContent');
 
-      msgTitle.innerText = `Encrypted Transmission for Day ${String(day).padStart(2, '0')} (Plaintext: "${plaintext}")`;
+      msgTitle.innerText = `Encrypted Transmission for Day ${String(day).padStart(2, '0')}`;// (Plaintext: "${plaintext}")`;
       msgContent.innerText = cipherText;
 
       drawSchematic();
+      }
     }
 
     function initUI() {
@@ -794,7 +800,7 @@
     }
 
     function processSignal(char) {
-      console.log(rotorPositions);
+      //console.log(rotorPositions[0], rotorPositions[1], rotorPositions[2]);
       let trace = { forward: [], reverse: [], key: char };
       let c = char.charCodeAt(0) - 65;
 
@@ -838,10 +844,10 @@
         const rSpec = ROTOR_SPECS[activeSlots[i]];
         const pos = rotorPositions[i];
         
-        let shiftIn = (c - pos + 26) % 26;
+        let shiftIn = (c + pos + 26) % 26;
         let charInWired = String.fromCharCode(65 + shiftIn);
         let mappedVal = rSpec.wiring.indexOf(charInWired);
-        let outVal = (mappedVal + pos + 26) % 26;
+        let outVal = (mappedVal - pos + 26) % 26;
 
         trace.reverse.push({ 
           stage: `Rotor ${i+1}`, 
@@ -858,8 +864,12 @@
       pluggedChar = plugboardPairs[String.fromCharCode(c + 65)];
       if (pluggedChar) c = pluggedChar.charCodeAt(0) - 65;
       trace.reverse.push({ stage: 'Plug Out', val: c, char: String.fromCharCode(c + 65) });
-
-      console.log(trace);
+      /*
+      console.log(
+        trace.forward[0].char,trace.forward[1].char,trace.forward[2].char,trace.forward[3].char,
+        trace.reflector.inChar, trace.reflector.outChar,
+        trace.reverse[0].char,trace.reverse[1].char,trace.reverse[2].char,trace.reverse[3].char,
+      );*/
       return { finalChar: String.fromCharCode(c + 65), trace: trace };
     }
 
