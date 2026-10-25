@@ -1,0 +1,1 @@
+pip3 install mkdocs pymdown-extensions python-markdown-math

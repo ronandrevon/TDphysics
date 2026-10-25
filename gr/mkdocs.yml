@@ -1,0 +1,30 @@
+site_name: GR
+site_author: Tarik Ronan Drevon
+
+docs_dir: 'docs'
+#site_dir: 'site'
+
+theme: readthedocs
+markdown_extensions:
+    - wikilinks
+    - toc:
+        title: Table of Contents
+    - attr_list
+    - fenced_code
+    - mdx_math:
+        enable_dollar_delimiter: True
+
+extra_javascript:
+ - 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML'
+ - 'mathjaxhelper.js'
+
+
+nav:
+- 'planetary motions': 'planetary_motions.md'
+- 'Concepts':    
+    - 'Lagrangian mechanics' : Lagrangian_mechanics.md
+    - 'quantum mechanics' : quantum_mechanics.md
+    - 'geodesics' : geodesics.md
+    - 'spin' : spin.md
+    
+    

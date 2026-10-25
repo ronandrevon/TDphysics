@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>n-p Junction Simulator</title>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+    <link rel="stylesheet" href="SC_parabolic.css">
+</head>
+<body>
+
+    <header>
+        <h1>Homogeneous n-p Junction Band Diagram & Characteristics</h1>
+    </header>
+
+    <div class="controls">
+        <div class="control-group">
+            <label for="biasSlider">Applied Bias Voltage ($V_a$):</label>
+            <input type="range" id="biasSlider" min="-1.5" max="0.65" step="0.01" value="0">
+            <span id="biasVal" class="value-display">0.00 V</span>
+        </div>
+        <button id="resetBtn" style="padding: 6px 12px; cursor: pointer;">Reset Bias</button>
+    </div>
+
+    <div class="grid-container">
+        <!-- Left Column: Spatial Diagrams -->
+        <div class="panel">
+            <canvas id="diagramCanvas" width="800" height="750"></canvas>
+            <div class="legend">
+                <div class="legend-item"><div class="legend-color" style="background: var(--accent-ec);"></div> E<sub>c</sub> (Conduction Band)</div>
+                <div class="legend-item"><div class="legend-color" style="background: var(--accent-ev);"></div> E<sub>v</sub> (Valence Band)</div>
+                <div class="legend-item"><div class="legend-color" style="background: var(--accent-ef);"></div> E<sub>F</sub> / Quasi-Fermi levels</div>
+                <div class="legend-item"><div class="legend-color" style="background: var(--accent-efield);"></div> Electric Field (E)</div>
+                <div class="legend-item"><div class="legend-color" style="background: #00d2ff; border-style: dashed;"></div> Electron density (n)</div>
+                <div class="legend-item"><div class="legend-color" style="background: #ff4757; border-style: dashed;"></div> Hole density (p)</div>
+            </div>
+        </div>
+
+        <!-- Right Column: IV Curve & Explanation -->
+        <div class="panel">
+            <canvas id="ivCanvas" width="400" height="350"></canvas>
+            <div class="info-text">
+                <h3>Physical Insights</h3>
+                <p><strong>Equilibrium ($V_a = 0$):</strong> Built-in potential $V_{bi}$ creates an energy barrier ($qV_{bi}$) preventing net carrier flow. $E_F$ is constant across the junction.</p>
+                <p><strong>Forward Bias ($V_a > 0$):</strong> Lowers the potential barrier to $q(V_{bi} - V_a)$. The depletion region shrinks, allowing exponentially more majority carriers to diffuse over the barrier. Minority carriers are injected across the depletion boundaries, driving high forward current.</p>
+                <p><strong>Reverse Bias ($V_a < 0$):</strong> Increases the potential barrier to $q(V_{bi} + |V_a|)$. The depletion width expands, suppressing diffusion. Only a tiny drift current (saturation current $I_0$) flows from thermal generation of minority carriers.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="SC_parabolic.js"></script>
+</body>
+</html>
